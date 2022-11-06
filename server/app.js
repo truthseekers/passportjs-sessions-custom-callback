@@ -81,6 +81,11 @@ passport.use(
       // done(null, false, {message: "Unauthorized login credentials!"}) // User input error when 2nd param is false
 
       try {
+        if (email === "apperror") {
+          throw new Error(
+            "Oh no! The application crashed! We have reported the issue. You can change next(error) to next(error.message) to hide the stack trace"
+          );
+        }
         const user = users.find((user) => user.email === email);
 
         if (!user) {
@@ -121,11 +126,11 @@ app.get("/success", (req, res) => {
   console.log("req.query: ", req.query);
   console.log("req.isAuthenticated: ", req.isAuthenticated());
 
-  res.send("SUCCESS");
+  res.send(`You're in! ${req.query.message}`);
 });
 
 app.get("/failed", (req, res) => {
-  console.log("req.session: ", req.session);
+  console.log(`failed! ${req.query?.message}`);
 
   res.send("FAILED");
 });
@@ -156,6 +161,14 @@ app.post(
       console.log("err: ", err);
       console.log("user: ", user);
       console.log("info: ", info);
+
+      if (err) {
+        return next(err);
+      }
+
+      if (!user) {
+        return res.redirect(`/failed?message=${info.message}`);
+      }
 
       req.login(user, async (error) => {
         return res.redirect(`success?message=${info.message}`);
